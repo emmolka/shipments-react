@@ -53,8 +53,12 @@ const Shipment = props => {
                                 <div className="input-group-btn">
                                   <button
                                     type="button"
-                                    className="btn btn-block btn-info"
-                                    onClick={props.onClick}
+                                    className={
+                                      props.value
+                                        ? "btn btn-block btn-info"
+                                        : "btn btn-block btn-info disabled"
+                                    }
+                                    onClick={props.value ? props.onClick : null}
                                   >
                                     Add Item
                                   </button>

@@ -11,7 +11,6 @@ import newItemId from "../Modules/newItemId";
 import clearItemInput from "../Modules/clearItemInput";
 import clearShipmentInput from "../Modules/clearShipmentInput";
 // import { Bar, Line, Pie } from "react-chartjs-2";
-
 class ShipmentsAndItems extends React.Component {
   state = {
     shipments: [],
@@ -41,6 +40,7 @@ class ShipmentsAndItems extends React.Component {
       });
     }
   };
+
   //showing the shipment that has a possibility to add another ship
   showNewShipment = () => {
     if (this.state.isShipmentOpen) {
@@ -62,24 +62,17 @@ class ShipmentsAndItems extends React.Component {
     this.setState({ newShipmentName: e.target.value });
   };
 
-  // //After adding a shipment it shows a newly added shipment
-  // hideAddNewShipment = () => {
-  //   this.setState({
-  //     isNewShipmentOpen: false,
-  //     isShipmentOpen: true,
-  //     openedShipmentId: this.state.newShipmentId,
-  //     openedShipmentName: this.state.newShipmentName
-  //   });
-  // };
-
   //adding shipment
   addNewShipment = async event => {
+    const id = this.state.newShipmentId;
+    const name = this.state.newShipmentName;
+    clearShipmentInput(this);
     try {
       await axios.post(
         `https://api.shipments.test-y-sbm.com/shipment`,
         {
-          id: this.state.newShipmentId,
-          name: this.state.newShipmentName
+          id: id,
+          name: name
         },
         {
           headers: {
@@ -87,18 +80,16 @@ class ShipmentsAndItems extends React.Component {
           }
         }
       );
-      this.addNewShipmentToState();
-      // this.hideAddNewShipment(this.state);
-      clearShipmentInput(this);
+      this.addNewShipmentToState(id, name);
       newShipmentId(this);
     } catch (e) {
       alert("Adding shipment failed");
     }
   };
-  addNewShipmentToState = () => {
+  addNewShipmentToState = (id, name) => {
     const shipment = {
-      id: this.state.newShipmentId,
-      name: this.state.newShipmentName,
+      id: id,
+      name: name,
       items: []
     };
     const currentArray = [...this.state.shipments];
@@ -111,6 +102,7 @@ class ShipmentsAndItems extends React.Component {
   //deteting shipment
   deleteShipment = async event => {
     const shipmentId = this.state.openedShipmentId;
+    this.deleteShipmentFromState();
     try {
       await axios.delete(
         `https://api.shipments.test-y-sbm.com/shipment/${shipmentId}`,
@@ -120,9 +112,9 @@ class ShipmentsAndItems extends React.Component {
           }
         }
       );
-      this.deleteShipmentFromState();
     } catch (e) {
       alert("Deleting shipment failed");
+      this.fetchShipments();
     }
   };
   deleteShipmentFromState = () => {
@@ -139,12 +131,15 @@ class ShipmentsAndItems extends React.Component {
   };
   //adding Item
   addItem = async event => {
+    const id = this.state.newItemId;
+    const code = this.state.newItemName;
+    clearItemInput(this);
     try {
       await axios.post(
         `https://api.shipments.test-y-sbm.com/item`,
         {
-          id: this.state.newItemId,
-          code: this.state.newItemName,
+          id: id,
+          code: code,
           shipment_id: this.state.openedShipmentId,
           name: this.state.openedShipmentName
         },
@@ -154,18 +149,17 @@ class ShipmentsAndItems extends React.Component {
           }
         }
       );
-      this.addItemToState();
+      this.addItemToState(id, code);
       newItemId(this);
-      clearItemInput(this);
     } catch (e) {
       alert(e);
     }
   };
 
-  addItemToState = () => {
+  addItemToState = (id, code) => {
     const item = {
-      id: this.state.newItemId,
-      code: this.state.newItemName,
+      id: id,
+      code: code,
       shipment_id: this.state.openedShipmentId
     };
     const currentArray = [...this.state.shipments];
@@ -181,15 +175,16 @@ class ShipmentsAndItems extends React.Component {
   };
   //deteting item
   deleteItem = async e => {
+    this.deleteItemFromState(e);
     try {
       await axios.delete(`https://api.shipments.test-y-sbm.com/item/${e.id}`, {
         headers: {
           Authorization: `bearer ${localStorage.token}`
         }
       });
-      this.deleteItemFromState(e);
     } catch (e) {
       alert("Deleting item failed");
+      this.fetchShipments();
     }
   };
 
@@ -211,10 +206,8 @@ class ShipmentsAndItems extends React.Component {
     });
     this.setState({ shipments: newArray });
   };
-  //downloading all shipments
-  async componentDidMount() {
-    newShipmentId(this);
-    newItemId(this);
+
+  fetchShipments = async event => {
     try {
       const data = await axios.get(
         `https://api.shipments.test-y-sbm.com/shipment`,
@@ -233,6 +226,12 @@ class ShipmentsAndItems extends React.Component {
       this.props.props.history.push("/login");
       localStorage.clear();
     }
+  };
+  //downloading all shipments
+  async componentDidMount() {
+    newShipmentId(this);
+    newItemId(this);
+    this.fetchShipments();
   }
   render() {
     return (
@@ -307,144 +306,3 @@ class ShipmentsAndItems extends React.Component {
 }
 
 export default ShipmentsAndItems;
-/*
-<div className="row">
-            <div className="col-md-6">
-              
-              <div className="box box-primary">
-                <div className="box-header with-border">
-                  <h3 className="box-title">Area Chart</h3>
-                  <div className="box-tools pull-right">
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="collapse"
-                    >
-                      <i className="fa fa-minus" />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="remove"
-                    >
-                      <i className="fa fa-times" />
-                    </button>
-                  </div>
-                </div>
-                <div className="box-body">
-                  <div className="chart">
-                    <canvas
-                      id="areaChart"
-                      style={{ height: "144px", width: "435px" }}
-                      width={435}
-                      height={144}
-                    />
-                  </div>
-                </div>
-               
-              </div>
-             
-              <div className="box box-danger">
-                <div className="box-header with-border">
-                  <h3 className="box-title">Donut Chart</h3>
-                  <div className="box-tools pull-right">
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="collapse"
-                    >
-                      <i className="fa fa-minus" />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="remove"
-                    >
-                      <i className="fa fa-times" />
-                    </button>
-                  </div>
-                </div>
-                <div className="box-body">
-                  <canvas
-                    id="pieChart"
-                    style={{ height: "227px", width: "455px" }}
-                    width={455}
-                    height={227}
-                  />
-                </div>
-               
-              </div>
-        
-            </div>
-            
-            <div className="col-md-6">
-           
-              <div className="box box-info">
-                <div className="box-header with-border">
-                  <h3 className="box-title">Line Chart</h3>
-                  <div className="box-tools pull-right">
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="collapse"
-                    >
-                      <i className="fa fa-minus" />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="remove"
-                    >
-                      <i className="fa fa-times" />
-                    </button>
-                  </div>
-                </div>
-                <div className="box-body">
-                  <div className="chart">
-                    <canvas
-                      id="lineChart"
-                      style={{ height: "144px", width: "435px" }}
-                      width={435}
-                      height={144}
-                    />
-                  </div>
-                </div>
-               
-              </div>
-          
-              <div className="box box-success">
-                <div className="box-header with-border">
-                  <h3 className="box-title">Bar Chart</h3>
-                  <div className="box-tools pull-right">
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="collapse"
-                    >
-                      <i className="fa fa-minus" />
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-box-tool"
-                      data-widget="remove"
-                    >
-                      <i className="fa fa-times" />
-                    </button>
-                  </div>
-                </div>
-                <div className="box-body">
-                  <div className="chart">
-                    <canvas
-                      id="barChart"
-                      style={{ height: "132px", width: "435px" }}
-                      width={435}
-                      height={132}
-                    />
-                  </div>
-                </div>
-             
-              </div>
-             
-            </div>
-          
-          </div> */
